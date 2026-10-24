@@ -1,15 +1,11 @@
 # Threat Hunt Report: Echo Leaks (Operation ECHOLEAK), an AI assistant data exposure
 
-A [Cyber Range](https://www.skool.com/cyber-range) live community threat hunt ("Echo Leaks", Operation ECHOLEAK): a
-prompt-injection attack on Microsoft 365 Copilot at an investment firm. An email attachment carried hidden instructions
-written for the AI assistant; when a financial analyst asked Copilot to summarise it, Copilot read 13 confidential files
-across the Executive, HR, IT and Finance sites and wrote 13 image links to an outside domain that could carry the data
-out. Investigated from the Copilot audit, Office activity and Entra sign-in logs with KQL in Microsoft Defender Advanced
-Hunting, with seven detections replayed against the data. All 17 flags, a perfect 1,600 / 1,600, finished on time.
-Published after the hunt closed on 24 October 2026. A PDF copy of the report as submitted is in the repo:
-[EchoLeaks-Report.pdf](EchoLeaks-Report.pdf) (its TLP:AMBER marking applied until the close).
+A [Cyber Range](https://www.skool.com/cyber-range) live community threat hunt: a prompt-injection attack on Microsoft 365
+Copilot at an investment firm, investigated with KQL across the Copilot audit, Office activity and Entra sign-in logs.
+All 17 flags, a perfect 1,600 / 1,600, on time. Published after the hunt closed on 24 October 2026; the report as
+submitted is in the repo: [EchoLeaks-Report.pdf](EchoLeaks-Report.pdf) (its TLP:AMBER marking applied until the close).
 
-**Analyst:** Ken Kariuki · **Date:** 17 October 2026 · **Result:** 17 of 17 flags, 1,600 / 1,600 points, completed on time (live hunt, second finisher on the scoreboard, no paid hints)
+**Analyst:** Ken Kariuki · **Date:** 17 October 2026 · **Result:** 17 of 17 flags, 1,600 / 1,600, on time (second finisher on the scoreboard, no paid hints)
 
 ## 1. Front matter
 
@@ -17,56 +13,53 @@ Published after the hunt closed on 24 October 2026. A PDF copy of the report as 
 |---|---|
 | Hunt | Echo Leaks (Operation ECHOLEAK), run el--17-20260920 |
 | Author | Ken Kariuki |
-| Version | v1.0, 2026-10-17 |
+| Version | v1.1, 2026-10-24 |
 | Classification | TLP:CLEAR from 2026-10-24 (simulated range data; TLP:AMBER while the hunt was open) |
-| Release | Published after the hunt closed (2026-10-24 12:00 UTC) |
 | Distribution | Public |
 
 | Version | Date | Change |
 |---|---|---|
-| 0.x | 2026-10-17 | Working drafts during the hunt |
-| 1.0 | 2026-10-17 | 17-section structure; detections D1–D7 replayed; exhibits E1–E8 attached |
+| 1.0 | 2026-10-17 | The submitted report: 17 sections, detections D1–D7 replayed, exhibits E1–E8 |
+| 1.1 | 2026-10-24 | This public copy, rewritten to the point; the submitted PDF is unchanged |
 
-**Clock note.** TimeGenerated is the only time field filled (OriginalTime is empty) and may be ingestion time, so gaps of
-0–5 s between tables carry no meaning. The 2026-10-07 in the session ID cp-emily-20261007-1042 is not an event time.
-The portal shows datetime columns in the browser's time zone (PDT, UTC-7, on the analyst's machine), so every
-exhibit prints TimeGenerated as UTC text.
+**Clock note.** Every time is UTC from `TimeGenerated`, the only time field filled, so gaps of 0–5 s between tables mean
+nothing. The date inside the session ID `cp-emily-20261007-1042` is not an event time.
 
-**Labels.** "(Confidence: High/Medium/Low)" marks inferences only; logged facts cite an exhibit (E#, App C) or a query
-(App A).
+**Labels.** "(Confidence: …)" marks an inference; a fact cites its exhibit (E#, App C) or query (App A).
 
 ## 2. Executive summary
 
-At 2026-09-20 09:15:22 UTC Emily Chen, a financial analyst, received an outside email whose Word attachment hid
-instructions written for an AI assistant, not for her. At 2026-09-20 10:42:08 UTC she opened it from her OneDrive, and at
-2026-09-20 10:42:35 UTC she asked Microsoft 365 Copilot to summarise it. That request was her only logged part: no other prompt
-from her is logged in that Copilot session, and her account was not taken over.
+**Bottom line.** A Word attachment carried hidden instructions for Microsoft 365 Copilot. One ordinary request from a
+financial analyst set them off: Copilot read 13 confidential files she had never opened and wrote 13 image links to an
+outside address that could carry the data out. Her account was never taken over. Severity: High (Confidence: Medium).
 
-Copilot then worked for the attacker inside her session. In 3 minutes 39 seconds it read 13 files that no one had opened before
-in the logs, on the Executive, HR, IT and Finance sites, among them board minutes, an M&A target assessment, salary reviews and an
-insider-trading investigation. It also wrote out what it presented as its own configuration. Its answers carried 13
-image links to an outside web address, each with an encoded string. The logs cannot show whether the answers were
-displayed, whether the links were fetched or whether the attacker received anything: exfiltration attempted;
-completion not determined.
+| Files read | Outside image links | Reads span | Observed dwell |
+|---|---|---|---|
+| **13**, first-time, on 4 SharePoint sites | **13**, in 3 answers, one host | **3 min 39 s**, in two waves | **1 h 31 min**, delivery to last answer |
 
-Observed dwell was 1 hour 31 minutes 13 seconds, from delivery to the last attacker-driven answer at 2026-09-20
-10:46:35 UTC. An analytics rule flagged unusual file access under Emily's account at 2026-09-20
-10:42 UTC; nothing flagged Copilot. No deletion of the email or the file is logged, so both should be assumed to remain. Treat the 13 files and the
-configuration as potentially exposed; severity High. Recommended now: block the outside address, remove the email and
-the file (keeping an evidence copy), stop Copilot answers loading outside images, and give Legal the file list. A
-password reset would not help.
+**What happened**
+
+- **09:15** Emily Chen receives an outside email with a Word attachment; she is its only recipient.
+- **10:42** She opens it and asks Copilot to summarise it; six seconds later Copilot starts searching files she never asked about.
+- **10:42 to 10:46** Copilot reads 13 files on the Executive, HR, IT and Finance sites in two waves, the second with no new prompt at all.
+- **10:43 to 10:46** Its answers carry 13 image links to `metrics-cdn[.]analyticshub[.]io` and a dump of what it calls its own configuration.
+- **10:42** An analytics rule flags unusual file access, on Emily. Nothing flags Copilot.
+
+**Recommended now.** (1) Block the outside address at proxy and DNS. (2) Remove the email and the file, keeping one evidence
+copy. (3) Stop Copilot answers loading outside images. (4) Give Legal & Compliance the file list (App F). A password reset
+would not help.
 
 ## 3. Overview
 
 | Item | Value |
 |---|---|
-| Hunt type; trigger | Intel-driven, hypothesis-based; an analytics rule flagged unusual file access at 2026-09-20 10:42 UTC (the brief gives the minute only) |
-| Client | Cormorant Capital Partners: about 200 employees, M365 E5 + Copilot; IT administrator mark.ross@cormorantcapital.com (Global Admin, 203.0.113.10; range brief) |
-| Subject | emily.chen@cormorantcapital.com, financial analyst (range brief), 203.0.113.45 |
-| Period hunted | 2026-09-19 00:00:00 UTC to 2026-09-22 00:00:00 UTC (brief window 2026-09-20 09:00:00 UTC to 2026-09-20 11:00:00 UTC) |
-| Data | M365 tenant only, no endpoints: OfficeActivity_CL 530 rows, CopilotAudit_CL 218, EntraSignIn_CL 80 (E6), in Defender Advanced Hunting |
-| Analyst; time spent | Ken Kariuki, lead analyst, with AI tooling (§16); 2026-10-17 14:00:07 UTC to 2026-10-17 16:05:21 UTC (2 h 05 min 14 s) plus report time |
-| Classification; severity | External input manipulation, not account or configuration compromise; High (Confidence: Medium) |
+| Hunt | Intel-driven and hypothesis-based; triggered by an unusual-file-access alert at 10:42 |
+| Client | Cormorant Capital Partners: about 200 staff, Microsoft 365 E5 with Copilot |
+| Subject | emily.chen, financial analyst |
+| Period | 2026-09-19 to 2026-09-22 (the brief's window: 2026-09-20 09:00 to 11:00 UTC) |
+| Data | Microsoft 365 only: OfficeActivity_CL 530 rows, CopilotAudit_CL 218, EntraSignIn_CL 80 (E6) |
+| Analyst | Ken Kariuki, lead analyst, with AI tooling (§16); 2 h 05 min of hunting |
+| Severity | High: an outside input steered the assistant; no account or configuration compromise (Confidence: Medium) |
 
 ## 4. Hypothesis and ABLE
 
@@ -75,221 +68,201 @@ read sensitive files under her account and write their data into image links to 
 
 | ABLE | Content |
 |---|---|
-| Actor | Outside sender quarterly.reports@globalfinancereview[.]net; identity unknown |
-| Behaviour | Unrequested Copilot searches and first-time file reads at machine speed; outside image links and configuration text in answers |
-| Location | Exchange, OneDrive, four SharePoint sites, Copilot in Word; no endpoint |
-| Evidence | OfficeActivity_CL (MessageReceived, FileAccessed); CopilotAudit_CL (Prompt, Search, ToolCall, Response); EntraSignIn_CL |
+| Actor | Outside sender `quarterly.reports@globalfinancereview[.]net`; identity unknown |
+| Behaviour | Unrequested searches and first-time reads at machine speed; outside image links and configuration text in answers |
+| Location | Exchange, OneDrive, four SharePoint sites, Copilot in Word |
+| Evidence | OfficeActivity_CL, CopilotAudit_CL, EntraSignIn_CL |
 
-Counter-hypotheses, judged in §10: H1 account takeover; H2 insider (Emily); H3 Copilot or tenant configuration
-compromise; H4 benign Copilot use.
+Tested against (§10): H1 account takeover, H2 insider, H3 Copilot or tenant compromise, H4 benign Copilot use.
 
 ## 5. Threat intel inputs
 
-The range brief set the trigger, identities and tables, and named public EchoLeak research (CVE-2025-32711; Aim
-Security, Unit 42, MSRC) for cross-reference. MITRE ATLAS AML.T0051 (its Indirect and Triggered sub-techniques) and case study AML.CS0059 served for mapping.
-No indicators came from intel. The chain matches the published technique (technique similarity, not attribution;
-Confidence: Medium), except that the public chain relayed through allowed Microsoft domains and this one names an
-outside domain.
+The range brief set the trigger and named the public EchoLeak research (CVE-2025-32711; Aim Security, Unit 42, MSRC).
+MITRE ATLAS AML.T0051 and case study AML.CS0059 served for mapping. The chain matches the published technique
+(similarity, not attribution; Confidence: Medium), except that this one names an outside domain; no indicator came from intel.
 
 ## 6. Scope, data sources and blind spots
 
-| Source | Rows (E6) | Shows | Coverage confidence |
-|---|---|---|---|
-| OfficeActivity_CL | 530 | Mail receipt, file access, label changes (metadata) | High for operations; none for content |
-| CopilotAudit_CL | 218 | Prompts, searches, tool calls, answer text, labels | High |
-| EntraSignIn_CL | 80 | Sign-ins | High |
-| Network, proxy, DNS, endpoint; SharePoint permissions; Purview | – | Not available | None |
+| Source | Rows | Shows |
+|---|---|---|
+| OfficeActivity_CL | 530 | Mail receipt, file access, label changes; no content |
+| CopilotAudit_CL | 218 | Prompts, searches, tool calls, answer text |
+| EntraSignIn_CL | 80 | Sign-ins |
+| Network, proxy, DNS, endpoint, SharePoint permissions, Purview | – | Not available |
 
-**B1** No network, proxy, DNS or endpoint telemetry: displayed, fetched and received are not observable. **B2** No file
-content. **B3** No document text, so the hidden instructions are not logged. **B4** History starts 2026-09-19 00:00:00
-UTC, which bounds "never opened". **B5** TimeGenerated only (clock note). **B6** A FileAccessed at 2026-09-20 10:44:15 UTC
-has no tool call (q18, E3a). **B7** An empty SensitivityLabels field may be a logging gap. **B8** No SharePoint permissions, so
-oversharing and a wider Copilot scope cannot be told apart.
+- **B1** No network, proxy, DNS or endpoint logs: whether the links were fetched, or anything received, is not observable.
+- **B2** No file content.
+- **B3** No document text, so the hidden instructions themselves are not logged.
+- **B4** History starts 2026-09-19, which bounds "never opened".
+- **B5** `TimeGenerated` is the only time field (clock note).
+- **B6** One FileAccessed at 10:44:15 has no tool call (q18).
+- **B7** An empty SensitivityLabels field may be a logging gap.
+- **B8** No SharePoint permissions, so oversharing and a wider Copilot scope cannot be told apart.
 
 ## 7. Execution
 
-**Method.** The analyst set each pivot as a question, had agents draft and run the query and then try to refute the
-result, and accepted a finding only when the raw result held up (§16). Each pivot is answered by a saved query
-(App A): the lure and who else got it (q1, E1); her request (q4);
-everything Copilot did in the session (q5, E3a, E3b); whether she had opened the files before (q7, E4); which domains
-the answers hold and how the links are built, counted and never printed (q8, q9, E5); the second answer's text (q12);
-the session against every other (q13, E7); her sign-ins (E2); wave 2 (q15); then, to close gaps found in review,
-every operation type (q16), the admin's sessions (q17), every FileAccessed under Emily in the attack window (q18), any use of the
-13 files by anyone (q19) and reply latency (q20).
+**Method.** Each pivot was a question with a saved query (App A); agents drafted and ran it, others tried to refute the
+result, and a finding stood only when the raw rows held up (§16).
 
-**Dead ends.** The IP on the delivery row is Emily's own client IP. The session ID's date is not a second session.
-The 19 mentions of the tenant's own SharePoint domain across the 106 normal replies are benign (E5). olivia.grant's 9
-SensitivityLabelUpdated events are unrelated (q16, q19). A
-ToolCall-only filter missed the five wave-2 searches, which are logged as Search. The 2026-09-20 10:44:15 UTC
-FileAccessed stays unclassified (B6); a Copilot re-read is possible (Confidence: Low).
+| Ruled out | Why |
+|---|---|
+| The IP on the delivery row | Emily's own client IP |
+| A second session from the session ID's date | The date is part of the ID, not an event |
+| 19 mentions of the tenant's own SharePoint domain | Benign, in normal replies (E5) |
+| olivia.grant's 9 label updates | Unrelated (q16, q19) |
+| A ToolCall-only filter for wave 2 | It missed the 5 searches, logged as Search |
 
 ## 8. Timeline
 
 | Time (UTC) | Event | Source · evidence |
 |---|---|---|
-| **2026-09-20 09:15:22 UTC** | Lure from quarterly.reports@globalfinancereview[.]net with Q3-2026-Global-Markets-Review.docx; Emily the only recipient | OfficeActivity_CL MessageReceived · F1, E1 |
-| 2026-09-20 10:42:08 UTC | Emily opens the lure from her OneDrive, 86 min 46 s after delivery (dormant, no activity on it) | OfficeActivity_CL FileAccessed · E1, q18 |
-| **2026-09-20 10:42:35 UTC** | Prompt in Word: "Summarise the key findings of this quarterly report" | CopilotAudit_CL Prompt · F1, E3a |
-| 2026-09-20 10:42:41 UTC | Wave 1: 3 searches over 4 s (board minutes, M&A target, salary review) | CopilotAudit_CL ToolCall · F2, E3a |
-| **2026-09-20 10:42:47 UTC** | 5 reads, 2 s apart over 8 s, each with a FileAccessed under Emily in the same second | CopilotAudit_CL ToolCall; OfficeActivity_CL FileAccessed · F3, E4 |
-| 2026-09-20 10:42 UTC | Analytics rule flags unusual file access (minute only) | Range brief · §3 |
-| 2026-09-20 10:43:08 UTC | Answer 1: 4 outside image links, 33 s after the prompt | CopilotAudit_CL Response · F6, E5 |
-| 2026-09-20 10:44:15 UTC | Second FileAccessed on the configuration file, no tool call | OfficeActivity_CL FileAccessed · q18, B6 |
-| **2026-09-20 10:44:19 UTC** | Answer 2: "System configuration extracted:", 1 link | CopilotAudit_CL Response · F4, E5 |
-| 2026-09-20 10:45:30 UTC | Wave 2 with no new prompt: 5 searches over 15 s | CopilotAudit_CL Search · F5, E3b |
-| 2026-09-20 10:45:46 UTC | 8 reads over 40 s; a FileAccessed 0–5 s after each, the last at 2026-09-20 10:46:30 UTC | CopilotAudit_CL ToolCall; OfficeActivity_CL FileAccessed · F5, E4 |
-| **2026-09-20 10:46:35 UTC** | Answer 3: 8 outside image links; last event of the session | CopilotAudit_CL Response · F6, E5 |
+| **2026-09-20 09:15:22 UTC** | The lure arrives; Emily is the only recipient | OfficeActivity · E1 |
+| 2026-09-20 10:42:08 UTC | Emily opens it, 86 minutes later | OfficeActivity · E1 |
+| **2026-09-20 10:42:35 UTC** | "Summarise the key findings of this quarterly report" | CopilotAudit · E3a |
+| 2026-09-20 10:42:41 UTC | Wave 1: three searches nobody asked for | CopilotAudit · E3a |
+| **2026-09-20 10:42:47 UTC** | Five first-time file reads, 2 s apart | CopilotAudit, OfficeActivity · E4 |
+| 2026-09-20 10:42 UTC | Unusual-file-access alert fires, on Emily | Range brief |
+| 2026-09-20 10:43:08 UTC | Answer 1: four outside image links | CopilotAudit · E5 |
+| **2026-09-20 10:44:19 UTC** | Answer 2: "System configuration extracted:" | CopilotAudit · E5 |
+| 2026-09-20 10:45:30 UTC | Wave 2, with no new prompt: five searches | CopilotAudit · E3b |
+| 2026-09-20 10:45:46 UTC | Eight more first-time reads in 40 s | CopilotAudit, OfficeActivity · E4 |
+| **2026-09-20 10:46:35 UTC** | Answer 3: eight outside image links; the session ends | CopilotAudit · E5 |
 
 ## 9. Findings
 
-**F1 One mailbox, one ordinary request.** *State:* Emily alone received the lure; she opened it, asked for a summary,
-and the first tool call followed 6 s later. *Show:* E1, E3a; q1, q4. *Interpret:* the attachment carried the
-instructions and her request was the only human step (Confidence: High; document text not logged, B3).
+### The trigger
 
-**F2 Wave 1: searches nobody asked for.** *State:* 3 searches (board minutes, M&A target, salary review), then 5 reads
-2 s apart (4 Confidential, 1 Internal Only) on four sites; the first answer came 33 s after the prompt, where the 85
-normal sessions that log a prompt answer in 0 s. *Show:* E3a; q5, q20; App F rows 1–5. *Interpret:* no search term serves a summary of a
-markets report, so the document steered Copilot (Confidence: High).
+**F1 One mailbox, one ordinary request.** *State:* Emily alone received the lure; she opened it, asked for a summary, and
+Copilot's first tool call came 6 s later. *Show:* E1, E3a. *Interpret:* the attachment carried the instructions and her
+request was the only human step (Confidence: High; the document text is not logged, B3).
 
-**F3 Copilot's reads are logged as Emily's file access.** *State:* each of the 13 reads has a FileAccessed under her
-account 0–5 s later, and those 14 rows (13 plus the configuration file's second access, B6) are the only activity on the 13 files by anyone in the logs: no earlier open,
-no later download or share (q19). *Show:* E4; q7, q19; App F. *Interpret:* Copilot, not Emily, made the reads
-(Confidence: High), so an alert on that file access points at the user, not the agent.
+### What Copilot did
 
-**F4 Configuration written into an answer.** *State:* the 2026-09-20 10:44:19 UTC answer (Internal Only) contains "System
-configuration extracted:" and lists label names, the DLP policy block-external-sharing-confidential, data sources, the
-access scope Global Reader and an organisation structure. *Show:* E5; q12 (links masked). *Interpret:* a map of the
-tenant's controls is potentially exposed; it was not checked against the real configuration (Confidence: Medium).
+**F2 Searches nobody asked for.** *State:* three searches (board minutes, an M&A target, salary review), then five reads 2 s
+apart; the first answer took 33 s, where normal sessions answer in under a second. *Show:* E3a. *Interpret:* no search term
+serves a summary of a markets report, so the document steered Copilot (Confidence: High).
 
-**F5 Wave 2 ran with no new prompt logged.** *State:* 71 s after answer 2, with no prompt row in between, 5 searches (confidential, restricted, board,
-acquisition, salary), logged as Search, then 8 reads of first-time files with no label recorded. *Show:* E3b; q15;
-App F rows 6–13. *Interpret:* Copilot acted on the injected instructions, not on a request (Confidence: High; the search terms carry
-this, not the missing row, since 19 normal sessions log a reply with no prompt row, q20).
+**F3 Copilot's reads look like Emily's.** *State:* each of the 13 reads has a FileAccessed under her account 0–5 s later,
+and those are the only activity on the 13 files by anyone. *Show:* E4. *Interpret:* Copilot made the reads, not Emily
+(Confidence: High), so an alert on the file access points at the user, not the agent.
 
-**F6 13 image links to one outside host.** *State:* 4, 1 and 8 Markdown image links to metrics-cdn[.]analyticshub[.]io,
-each with an encoded query string; the attack answers average 880 characters against 151 for the 106 normal replies,
-none of which holds an outside image link. *Show:* E5, E6, E8 (D2: 0 false positives); q8, q9. *Interpret:* the links likely carry
-data from the files and the configuration, since 4 + 1 and 8 links match the 5 and 8 reads (Confidence: Medium; not
-decoded). Exfiltration attempted; completion not determined (B1).
+**F4 Its configuration, written into an answer.** *State:* the second answer lists label names, a DLP policy, data sources,
+the access scope Global Reader and an organisation structure. *Show:* E5. *Interpret:* a map of the tenant's controls is
+potentially exposed (Confidence: Medium; not checked against the real configuration).
 
-**F7 One session, one account.** *State:* the hijacked session holds 25 events, 21 of them tool events; Emily's 24
-other sessions and 80 sessions from 22 other users hold none. *Show:* E7; q13. *Interpret:* the scope is one session within
-the three tables (Confidence: High). Whether Copilot reached Executive, HR and IT files through her own permissions or
-the Global Reader scope the dump claims is not determined (B8).
+**F5 A second wave, with no prompt.** *State:* 71 s after answer 2, five more searches and eight more first-time reads ran
+with no new request. *Show:* E3b. *Interpret:* Copilot acted on the injected instructions alone (Confidence: High).
 
-**9.8 Negative findings**
+### The way out
 
-| Looked for | Where | Method | Result |
-|---|---|---|---|
-| Other recipients of the lure | OfficeActivity_CL, all mailboxes | E1 | Only Emily; no deletion or other operation on the file |
-| Attacker sign-in | EntraSignIn_CL, Emily | E2 | 2 Success sign-ins, 203.0.113.45, London GB, CA success |
-| Inbox rules; Copilot or tenant changes | OfficeActivity_CL, all users | q16 | 11 operation types, none a rule or configuration change; the only single-user type is 9 SensitivityLabelUpdated by olivia.grant |
-| Any other use of the 13 files | OfficeActivity_CL, all users | q19, E4 | None: Emily's 14 FileAccessed rows are the only ones |
-| The outside domain elsewhere | All three tables | E6 | Only the 3 attack answers |
-| The same behaviour elsewhere | CopilotAudit_CL | E7 | None in 104 sessions |
-| Admin control (Mark Ross) | CopilotAudit_CL | q17 | 2 normal sessions (2026-09-20 07:38:14 UTC in Excel, 2026-09-20 12:50:00 UTC in Word), 1 prompt each, no tool events |
+**F6 Thirteen image links to one outside host.** *State:* 4, 1 and 8 image links to `metrics-cdn[.]analyticshub[.]io`, each
+with an encoded string; none of 106 normal replies holds one. *Show:* E5, E6, E8. *Interpret:* the links likely carry data
+from the files, since 4 + 1 and 8 match the 5 and 8 reads (Confidence: Medium; not decoded). Exfiltration attempted;
+completion not determined (B1).
+
+**F7 One session, one account.** *State:* the hijacked session holds 21 tool events; Emily's 24 other sessions and 80 from
+22 other users hold none. *Show:* E7. *Interpret:* the scope is one session (Confidence: High).
+
+### Negative findings
+
+| Looked for | Result |
+|---|---|
+| Other recipients of the lure | Only Emily (E1) |
+| A sign-in by the attacker | None: 2 successful sign-ins from her own IP in London, Conditional Access passed (E2) |
+| Inbox rules, Copilot or tenant changes | None among 11 operation types (q16) |
+| Any other use of the 13 files | None (q19, E4) |
+| The outside domain anywhere else | Only the 3 attack answers (E6) |
+| The same behaviour in other sessions | None in 104 sessions (E7) |
 
 ## 10. Hypothesis outcome
 
-**Confirmed** on logged facts: delivery to Emily only (E1), 13 reads (E4), the configuration answer and 13 links (E5).
-**Not determined:** what the 13 links carry (not decoded; F6, Confidence: Medium), whether exfiltration completed (B1;
-the Word client's image-loading policy is unknown) and the wave-2 labels (B7; confirm in Purview).
+**Confirmed:** delivery to Emily alone, 13 reads, the configuration answer and 13 outside links (E1, E4, E5). **Not
+determined:** what the links carry and whether anything left (B1).
 
-| Counter-hypothesis | Verdict and evidence |
+| Counter-hypothesis | Verdict |
 |---|---|
-| H1 Account takeover | Rejected (Confidence: High): 2 Success sign-ins, both from 203.0.113.45, London GB, CA success (E2) |
-| H2 Insider (Emily) | Rejected (Confidence: High): one open and one ordinary prompt, then machine-speed reads and a wave with no prompt (F1, F5) |
-| H3 Configuration compromise | Rejected (Confidence: Medium): no rule or configuration change among 11 operation types (q16); Mark Ross's sessions normal (q17) |
+| H1 Account takeover | Rejected (Confidence: High): two normal sign-ins (E2) |
+| H2 Insider | Rejected (Confidence: High): one open and one ordinary prompt, then machine-speed reads (F1, F5) |
+| H3 Configuration compromise | Rejected (Confidence: Medium): no configuration change among 11 operation types (q16) |
 | H4 Benign Copilot use | Rejected (Confidence: High): no tool events in 104 normal sessions (E7) |
 
-**Dwell.** Observed span 1 h 31 min 13 s (2026-09-20 09:15:22 UTC to 2026-09-20 10:46:35 UTC): dormant 86 min 46 s to
-the open, active 4 min 00 s from prompt to last answer, reads spanning 3 min 39 s by tool call (2026-09-20 10:42:47 UTC to
-2026-09-20 10:46:26 UTC; the file-access rows end at 2026-09-20 10:46:30 UTC), 71 s between the waves. Time to
-detection: the file-access rule fired at 2026-09-20 10:42 UTC; nothing alerted at the Copilot layer, and this hunt
-reconstructed the chain on 2026-10-17. End of exposure: not established, since no deletion of the lure is logged (E1).
+### Dwell
 
-**Scope and impact.** One account, one session, 13 files on four SharePoint sites (Executive 4, HR 3, IT 1 being the
-configuration file, Finance 5; q18). From the file names (Confidence: Medium): deal data that is likely inside
-information, executive pay, client data, board material, audit results and an insider-trading investigation with
-tipping-off risk (App F); the configuration answer maps the tenant's controls (F4). Legal & Compliance decide on
-notification.
+| Measure | Time |
+|---|---|
+| Delivery to the last attacker-driven answer | 1 h 31 min 13 s |
+| Dormant, delivery to the open | 86 min 46 s |
+| Active, prompt to last answer | 4 min 00 s |
+| Reads, first to last | 3 min 39 s |
+| Between the two waves | 71 s |
+
+**Scope and impact.** One account, one session, 13 files: Executive 4, HR 3, IT 1 and Finance 5 (App F). From the names:
+likely inside information on a deal, executive pay, client data, board material and an insider-trading investigation
+(Confidence: Medium). Legal & Compliance decide on notification.
 
 ## 11. ATT&CK and ATLAS coverage
 
-| Stage | ATT&CK | ATLAS | Status |
-|---|---|---|---|
-| Initial access | T1566.001 Spearphishing Attachment | AML.T0051.001 LLM Prompt Injection: Indirect (instructions in an emailed document) | Delivery observed; injection inferred from behaviour (B3) |
-| Execution | T1204.002 Malicious File (she opened it; no endpoint telemetry, B1) | AML.T0051.002 LLM Prompt Injection: Triggered (her request set it off, as in AML.CS0059) | Observed in behaviour |
-| Collection | T1213.002 Sharepoint | AML.T0053 AI Agent Tool Invocation; AML.T0085.000 Data from AI Services: RAG Databases | Observed; content not logged (B2) |
-| Discovery | T1083 File and Directory Discovery (the 8 searches) | AML.T0056 Extract LLM System Prompt; AML.T0084 Discover AI Agent Configuration | Observed; not checked against the real configuration |
-| Exfiltration | T1567 Exfiltration Over Web Service (nearest analogue) | AML.T0077 LLM Response Rendering | Attempted; completion not determined (B1) |
+| Stage | ATT&CK | ATLAS |
+|---|---|---|
+| Initial access | T1566.001 Spearphishing Attachment | AML.T0051.001 Prompt Injection: Indirect |
+| Execution | T1204.002 Malicious File | AML.T0051.002 Prompt Injection: Triggered |
+| Collection | T1213.002 SharePoint | AML.T0053 Agent Tool Invocation; AML.T0085.000 Data from AI Services |
+| Discovery | T1083 File and Directory Discovery | AML.T0056 Extract System Prompt; AML.T0084 Discover Agent Configuration |
+| Exfiltration | T1567 Exfiltration Over Web Service (nearest) | AML.T0077 LLM Response Rendering (attempted) |
 
-Hunted, not observed: T1078 Valid Accounts (E2); T1564.008 Email Hiding Rules and T1114.003 Email Forwarding Rule
-(q16); AML.T0081 Modify AI Agent Configuration (q16); T1537 Transfer Data to Cloud Account (q19). IDs checked on 2026-10-17 against attack.mitre.org and the ATLAS 2026.09 data release. The range's own mapping also
-lists T1059, T1041 and T1082; here they sit under the nearer AI techniques: T1059 as AML.T0051 (the model followed
-injected text; no interpreter ran), T1041 as T1567 and AML.T0077 (the links name an image host, not a command-and-control channel; B1) and T1082 as
-AML.T0056 and AML.T0084 (the assistant's configuration, not a host's).
+Hunted, not observed: T1078 Valid Accounts, T1564.008 Email Hiding Rules, T1114.003 Email Forwarding Rule, AML.T0081
+Modify Agent Configuration, T1537 Transfer to Cloud Account.
 
 ## 12. Detection and telemetry gaps
 
 Owners are proposed, not accepted.
 
-| Gap | Impact | Fix (owner) | Acceptance test |
-|---|---|---|---|
-| Only the file-access rule fired, on Emily; nothing alerted at the Copilot layer | Triage blames the user; 8 more files read after it | CopilotAudit_CL to the SIEM; D1–D7 as alerts (SOC) | A red-team replay whose hidden instruction makes Copilot answer first, then read three test files within one minute and add an image from a test outside domain, raises D1, D2, D5 and D6 |
-| Copilot answers can embed outside images (one host seen; client policy unknown) | Displaying an answer may send the data | Tenant-only answer images; block the domain (M365, network) | An outside test image loads nothing and the proxy shows no request |
-| Copilot obeyed instructions in an outside attachment | Any inbound file can steer it | Confirm the CVE-2025-32711 fix covers the tenant (M365 admin) | After the fix, the same replay yields no tool call and no outside image (D1, D2, D5 and D6 silent) |
-| Copilot in Emily's session reached Executive, HR and IT files (B8) | Reach beyond her role | Permission review on the four sites (SharePoint owners) | A Finance test user's search for "board minutes" returns no Executive file |
-| 8 wave-2 files with no label recorded | Label-based controls may miss them | Auto-labelling; DLP on the Copilot location (Compliance) | Purview shows labels on all 8 |
-| No network, proxy, DNS or endpoint telemetry (B1) | Completion cannot be settled | Collect proxy and DNS logs (Network) | A canary image fetch appears in DNS logs within 5 min |
+| Gap | Fix (owner) | Test |
+|---|---|---|
+| Only the file-access rule fired, on the user | Copilot audit to the SIEM; D1–D7 as alerts (SOC) | A red-team replay raises D1, D2, D5 and D6 |
+| Answers can embed outside images | Tenant-only answer images; block the domain (M365, network) | An outside test image loads nothing |
+| Copilot obeyed an outside attachment | Confirm the CVE-2025-32711 fix covers the tenant (M365 admin) | The replay yields no tool call |
+| Copilot reached Executive, HR and IT files | Permission review on the four sites (SharePoint owners) | A Finance test user finds no Executive file |
+| Eight files with no label recorded | Auto-labelling; DLP on Copilot (Compliance) | Purview shows labels on all eight |
+| No network, DNS or endpoint logs | Collect proxy and DNS logs (Network) | A canary image fetch appears within 5 min |
 
 ## 13. New detections
 
-All seven were replayed on this run (E8, App B); a false positive is a hit outside the hijacked session. The benign
-Copilot baseline (104 sessions) has no legitimate tool use at all, so 0 false positives on D1–D6 is weak evidence;
-D7 is the only rule with a real benign baseline (530 OfficeActivity_CL rows). Status of all seven: proposed (true
-positives on this run; a benign control is still pending, except for D7, whose benign baseline returned 0 false positives).
+All seven were replayed on the run (E8). The normal Copilot sessions use no tools at all, so zero false positives on D1–D6
+is weak evidence; D7 has a real benign baseline. All seven are proposed.
 
-| Rule | Logic (source) | Maps to | Hits / FP (unit) |
-|---|---|---|---|
-| D1 | 3+ Graph.ReadFile per session per minute (CopilotAudit_CL) | AML.T0053 | 3 / 0 (minute bins) |
-| D2 | Markdown image to a non-tenant domain in a reply (CopilotAudit_CL) | AML.T0077 | 13 / 0 (images) |
-| D3 | File search with sensitivity keywords (CopilotAudit_CL) | AML.T0053 | 8 / 0 (searches) |
-| D4 | System prompt or configuration text in a reply (CopilotAudit_CL) | AML.T0056 | 1 / 0 (replies) |
-| D5 | Read of a file the user never opened, bounded by B4 (CopilotAudit_CL, OfficeActivity_CL) | T1213.002 | 13 / 0 (reads) |
-| D6 | Tool call after an answer with no new prompt (CopilotAudit_CL) | AML.T0051.001 | 13 / 0 (tool events) |
-| D7 | FileAccessed on 3+ sites in 10 minutes (OfficeActivity_CL) | T1213.002 | 1 / 0 (user windows) |
-
-Expected false positives and tuning: D1 board-pack summaries (require a label or 2+ sites); D2 approved CDNs
-(allow-list; a broader untested regex is in App B); D3 HR, legal and executives (scope by role); D4 IT staff asking
-about DLP (alert on a canary string); D5 genuine "find me" requests (30+ days of history); D6 multi-step tasks (pair
-with D3 or D5); D7 shared-drive work (sliding window).
+| Rule | Fires on | Maps to | Hits / FP | Tune for |
+|---|---|---|---|---|
+| D1 | 3+ file reads per session per minute | AML.T0053 | 3 / 0 | Board-pack summaries |
+| D2 | An image to a non-tenant domain in a reply | AML.T0077 | 13 / 0 | Approved CDNs |
+| D3 | File searches with sensitivity keywords | AML.T0053 | 8 / 0 | HR, legal, executives |
+| D4 | System prompt or configuration text in a reply | AML.T0056 | 1 / 0 | IT staff asking about DLP |
+| D5 | A read of a file the user never opened | T1213.002 | 13 / 0 | Genuine "find me" requests |
+| D6 | A tool call after an answer, with no new prompt | AML.T0051.001 | 13 / 0 | Multi-step tasks |
+| D7 | File access on 3+ sites in 10 minutes | T1213.002 | 1 / 0 | Shared-drive work |
 
 ## 14. Handover to IR
 
-Compromise confirmed: Copilot was steered to read 13 files and write link data into its answers (exfiltration not
-determined); not an account takeover. For the client IR lead and Legal &
-Compliance; every action is recommended, not executed (range).
+Confirmed: Copilot was steered to read 13 files and write link data into its answers; not an account takeover.
+Recommended, not executed (range).
 
-| # | Risk (since) | Action |
+| # | Risk (since, UTC) | Action |
 |---|---|---|
-| 1 | Outside domain present in answers (since 2026-09-20 10:43:08 UTC) | Block metrics-cdn[.]analyticshub[.]io at proxy and DNS; tenant-only answer images |
-| 2 | No deletion of the lure is logged, so assume it is still in the mailbox and OneDrive; a new request may repeat the chain (Confidence: Medium; since 2026-09-20 09:15:22 UTC) | Purge both; keep one evidence copy |
-| 3 | 13 files and the configuration potentially exposed (since 2026-09-20 10:42:47 UTC) | App F to Legal & Compliance for the notification decision |
-| 4 | Audit rows age out | Preserve the session's CopilotAudit_CL and OfficeActivity_CL rows |
-| 5 | Copilot reach beyond Emily's role (since 2026-09-20 10:42:47 UTC) | SharePoint permission review on the four sites |
-
-Password reset not recommended: no account takeover is shown (E2).
+| 1 | The outside domain in answers (10:43:08) | Block `metrics-cdn[.]analyticshub[.]io`; tenant-only answer images |
+| 2 | The lure still in the mailbox and OneDrive (09:15:22) | Purge both; keep one evidence copy |
+| 3 | 13 files and the configuration potentially exposed (10:42:47) | App F to Legal & Compliance |
+| 4 | Audit rows age out | Preserve the session's rows |
+| 5 | Copilot reach beyond Emily's role (10:42:47) | Permission review on the four sites |
 
 ## 15. Next-hunt leads
 
 | Lead | Data needed |
 |---|---|
-| The 2026-09-20 10:44:15 UTC FileAccessed with no tool call (B6) | Copilot service and Purview audit |
-| SharePoint permissions against the Global Reader claim (B8) | Site permission reports; Emily's groups |
-| Labels on the 8 wave-2 files (B7) | Purview label audit |
-| Requests to metrics-cdn[.]analyticshub[.]io (B1) | Proxy, DNS and endpoint logs from 2026-09-20 10:43:08 UTC |
-| Recipients of the lure outside this dataset | Exchange message trace and quarantine |
+| The 10:44:15 FileAccessed with no tool call (B6) | Copilot service and Purview audit |
+| SharePoint permissions against the Global Reader claim (B8) | Site permission reports |
+| Labels on the eight wave-2 files (B7) | Purview label audit |
+| Requests to `metrics-cdn[.]analyticshub[.]io` (B1) | Proxy, DNS and endpoint logs from 10:43:08 |
+| Recipients of the lure outside this dataset | Exchange message trace |
 
 ## 16. AI tools declaration
 
