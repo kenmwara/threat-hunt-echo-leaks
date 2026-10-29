@@ -2,8 +2,8 @@
 
 # Threat Hunt Report: Echo Leaks (Operation ECHOLEAK), an AI assistant data exposure
 
-A [Cyber Range](https://www.skool.com/cyber-range) live community threat hunt: a prompt-injection attack on Microsoft 365
-Copilot at an investment firm, investigated with KQL across the Copilot audit, Office activity and Entra sign-in logs.
+A [Cyber Range](https://www.skool.com/cyber-range) live community threat hunt: hidden instructions in a Word file tricked Microsoft 365
+Copilot, the AI assistant at an investment firm, into reading confidential files. Traced through Microsoft's activity and sign-in logs using KQL (Microsoft's log search language).
 All 17 flags, a perfect 1,600 / 1,600, on time. Published after the hunt closed on 24 October 2026; the report as
 submitted is in the repo: [EchoLeaks-Report.pdf](EchoLeaks-Report.pdf) (its TLP:AMBER marking applied until the close).
 
