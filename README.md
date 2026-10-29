@@ -67,7 +67,7 @@ would not help.
 | Analyst | Ken Kariuki, lead analyst, with AI tooling (§16); 2 h 05 min of hunting |
 | Severity | High: an outside input steered the assistant; no account or configuration compromise (Confidence: Medium) |
 
-## 4. Hypothesis and ABLE
+## 4. What the hunt set out to prove (hypothesis and ABLE)
 
 **Hypothesis.** An emailed document carried hidden instructions that, once Emily asked Copilot about it, made Copilot
 read sensitive files under her account and write their data into image links to an outside domain.
@@ -81,13 +81,13 @@ read sensitive files under her account and write their data into image links to 
 
 Tested against (§10): H1 account takeover, H2 insider, H3 Copilot or tenant compromise, H4 benign Copilot use.
 
-## 5. Threat intel inputs
+## 5. What was already known about the attacker
 
 The range brief set the trigger and named the public EchoLeak research (CVE-2025-32711; Aim Security, Unit 42, MSRC).
 MITRE ATLAS AML.T0051 and case study AML.CS0059 served for mapping. The chain matches the published technique
 (similarity, not attribution; Confidence: Medium), except that this one names an outside domain; no indicator came from intel.
 
-## 6. Scope, data sources and blind spots
+## 6. What was searched, and what couldn't be seen
 
 | Source | Rows | Shows |
 |---|---|---|
@@ -105,7 +105,7 @@ MITRE ATLAS AML.T0051 and case study AML.CS0059 served for mapping. The chain ma
 - **B7** An empty SensitivityLabels field may be a logging gap.
 - **B8** No SharePoint permissions, so oversharing and a wider Copilot scope cannot be told apart.
 
-## 7. Execution
+## 7. How the hunt was run
 
 **Method.** Each pivot was a question with a saved query (App A); agents drafted and ran it, others tried to refute the
 result, and a finding stood only when the raw rows held up (§16).
@@ -180,7 +180,7 @@ completion not determined (B1).
 | The outside domain anywhere else | Only the 3 attack answers (E6) |
 | The same behaviour in other sessions | None in 104 sessions (E7) |
 
-## 10. Hypothesis outcome
+## 10. Was the hypothesis right?
 
 **Confirmed:** delivery to Emily alone, 13 reads, the configuration answer and 13 outside links (E1, E4, E5). **Not
 determined:** what the links carry and whether anything left (B1).
@@ -206,7 +206,7 @@ determined:** what the links carry and whether anything left (B1).
 likely inside information on a deal, executive pay, client data, board material and an insider-trading investigation
 (Confidence: Medium). Legal & Compliance decide on notification.
 
-## 11. ATT&CK and ATLAS coverage
+## 11. Attacker techniques seen (MITRE ATT&CK and ATLAS)
 
 | Stage | ATT&CK | ATLAS |
 |---|---|---|
@@ -219,7 +219,7 @@ likely inside information on a deal, executive pay, client data, board material 
 Hunted, not observed: T1078 Valid Accounts, T1564.008 Email Hiding Rules, T1114.003 Email Forwarding Rule, AML.T0081
 Modify Agent Configuration, T1537 Transfer to Cloud Account.
 
-## 12. Detection and telemetry gaps
+## 12. Gaps in alerts and logging
 
 Owners are proposed, not accepted.
 
@@ -232,7 +232,7 @@ Owners are proposed, not accepted.
 | Eight files with no label recorded | Auto-labelling; DLP on Copilot (Compliance) | Purview shows labels on all eight |
 | No network, DNS or endpoint logs | Collect proxy and DNS logs (Network) | A canary image fetch appears within 5 min |
 
-## 13. New detections
+## 13. New alert rules
 
 All seven were replayed on the run (E8). The normal Copilot sessions use no tools at all, so zero false positives on D1–D6
 is weak evidence; D7 has a real benign baseline. All seven are proposed.
