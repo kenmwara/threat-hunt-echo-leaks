@@ -266,19 +266,25 @@ Recommended, not executed (range).
 | Requests to `metrics-cdn[.]analyticshub[.]io` (B1) | Proxy, DNS and endpoint logs from 10:43:08 |
 | Recipients of the lure outside this dataset | Exchange message trace |
 
-## 16. AI tools declaration
+## 16. Methodology: AI-assisted analysis
 
-I ran this hunt as the lead analyst and used Claude (Anthropic), through Claude Code, as my AI tooling throughout,
-most heavily on the hardest parts: the answer-format questions, the detection replay and the report review. I set the
-approach and the order of the pivots, directed the work across agents from one lead session (query drafting, skeptic
-checks that tried to refute each proposed answer, answer-format modelling when an answer was not accepted, and report
-review), and went through every finding against its raw result before I accepted it.
+Analysis was AI-assisted (Claude, Anthropic, through Claude Code) under the direction of the lead analyst, most heavily
+for answer-format questions, the detection replay and report review. The analyst set the approach and the pivot order
+and directed the work from one lead session (query drafting, skeptic checks that attempted to refute each proposed
+answer, answer-format modelling, report review). Every finding was verified against its raw result before acceptance.
 
-- **Queries and evidence.** The agents drafted the KQL and ran it in a Defender Advanced Hunting tab in my signed-in browser, then returned the raw results; exhibits E1–E8 were captured the same way. I checked each result against the finding it supports.
-- **Answers.** The assistant helped draft and format candidate answers; I reviewed, approved and submitted every answer myself. I opened the platform's free first hint on some questions; no paid hints or reveals were used.
-- **Report.** The assistant kept the hunt log and drafted this report and the detection rules to the structure I set. Two reviewer agents graded the drafts against the six scoring categories and fact-checked every number, and I decided which fixes to apply.
-- **Data handling.** I signed in to every portal myself; no passwords or keys were given to the AI. The encoded link data was never printed or decoded.
-- **Approval.** I chose the findings and approved all text.
+- **Queries and evidence.** KQL was drafted with AI assistance and executed in Microsoft Defender Advanced Hunting in
+  the analyst's authenticated session; exhibits E1 to E8 were captured the same way and checked against the findings
+  they support.
+- **Answers.** Candidate answers were drafted and formatted with AI assistance; every answer was reviewed, approved and
+  submitted by the analyst. The platform's free first hint was opened on some questions; no paid hints or reveals were
+  used.
+- **Report.** The hunt log, this report and the detection rules were drafted with AI assistance to the analyst's
+  structure. Two reviewer agents graded the drafts against the six scoring categories and fact-checked every number;
+  the analyst decided which corrections to apply.
+- **Data handling.** All portal sign-ins were performed by the analyst; no passwords or keys were provided to the AI.
+  The encoded link data was never printed or decoded.
+- **Approval.** Findings and final text were approved by the analyst.
 
 ## 17. Appendices
 
