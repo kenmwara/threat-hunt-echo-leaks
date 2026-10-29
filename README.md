@@ -11,7 +11,7 @@ submitted is in the repo: [EchoLeaks-Report.pdf](EchoLeaks-Report.pdf) (its TLP:
 
 ## Key takeaways
 
-<img src="images/scorecard.png" width="100%" alt="Key takeaways. One ordinary request set off hidden instructions in a Word file. 13: Confidential files read. First-time reads on 4 SharePoint sites the analyst had never opened. 13: Outside image links. In 3 Copilot answers, all to one host that could carry the data out. 3 m 39 s: Read span. Two waves; the second ran with no new prompt at all. 0: Accounts taken over. The model was steered, not the user; a password reset would not help. 17 / 17: Flags, a perfect 1,600. Seven detections (D1–D7) replayed against the data.">
+<img src="images/scorecard.png" width="100%" alt="Key takeaways. One normal question to an AI assistant set off hidden instructions in a Word file. 13: Private files read. Copilot opened 13 confidential files the employee had never touched, across 4 company sites. 13: Hidden links to an outside server. Its answers carried links that could have sent the data out. 3 m 39 s: All in under four minutes. The second wave ran with no new question from anyone. 0: Accounts hacked. The AI was tricked, not the person. Resetting her password wouldn't have helped. 17 / 17: Every question answered. A perfect score, with seven alert rules tested against the evidence.">
 
 ## 1. Front matter
 
