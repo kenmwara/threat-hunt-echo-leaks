@@ -9,6 +9,10 @@ submitted is in the repo: [EchoLeaks-Report.pdf](EchoLeaks-Report.pdf) (its TLP:
 
 **Analyst:** Ken Kariuki · **Date:** 17 October 2026 · **Result:** 17 of 17 flags, 1,600 / 1,600, on time (second finisher on the scoreboard, no paid hints)
 
+## Key takeaways
+
+<img src="images/scorecard.png" width="100%" alt="Key takeaways. One ordinary request set off hidden instructions in a Word file. 13: Confidential files read. First-time reads on 4 SharePoint sites the analyst had never opened. 13: Outside image links. In 3 Copilot answers, all to one host that could carry the data out. 3 m 39 s: Read span. Two waves; the second ran with no new prompt at all. 0: Accounts taken over. The model was steered, not the user; a password reset would not help. 17 / 17: Flags, a perfect 1,600. Seven detections (D1–D7) replayed against the data.">
+
 ## 1. Front matter
 
 | Field | Value |
