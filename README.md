@@ -1,4 +1,4 @@
-<!-- banner --><a href="https://github.com/kenmwara"><img src="https://raw.githubusercontent.com/kenmwara/kenmwara/main/assets/brand/card-echo-leaks.png?v=8c51d67c" width="100%" alt="Echo Leaks: A prompt-injection attack on Microsoft 365 Copilot that read 13 confidential files and tried to carry them out. 17/17 flags · 1,600 / 1,600."></a>
+<!-- banner --><a href="https://github.com/kenmwara"><img src="https://raw.githubusercontent.com/kenmwara/kenmwara/main/assets/brand/card-echo-leaks.png?v=8c51d67c89" width="100%" alt="Echo Leaks: A prompt-injection attack on Microsoft 365 Copilot that read 13 confidential files and tried to carry them out. 17/17 flags · 1,600 / 1,600."></a>
 
 # Threat Hunt Report: Echo Leaks (Operation ECHOLEAK), an AI assistant data exposure
 
