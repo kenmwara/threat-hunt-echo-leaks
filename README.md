@@ -10,6 +10,12 @@
 
 <img src="images/scorecard.png" width="100%" alt="Key takeaways. One normal question to an AI assistant set off hidden instructions in a Word file. 13: Private files read. Copilot opened 13 confidential files the employee had never touched, across 4 company sites. 13: Hidden links to an outside server. Its answers carried links that could have sent the data out. 3 m 39 s: All in under four minutes. The second wave ran with no new question from anyone. 0: Accounts hacked. The AI was tricked, not the person. Resetting her password wouldn't have helped. 17 / 17: Every question answered. A perfect score, with seven alert rules tested against the evidence.">
 
+## At a glance
+
+<img src="images/flow.png" width="100%" alt="Flow diagram: how a Word file turned an AI assistant against its user. Start: an outside email with a Word file reaches one financial analyst. Hidden inside are instructions written for the AI. She asks Copilot to summarise it. Decision: does Copilot treat the file's text as content, not orders? No (the gap). Six seconds later Copilot searches for files she never asked about, reads 13 confidential files from the Executive, HR, IT and Finance sites, and its answers carry 13 image links to an outside server that could send the data out. Decision: do the alerts watch the AI's own actions? No; the only alert fires on the analyst. End: her account was never taken over; the AI was. The hunter starts at the one alert and traces back to Copilot.">
+
+<sub>Editable diagram: [images/flow.drawio](images/flow.drawio) (opens in diagrams.net).</sub>
+
 ## How the attack unfolded
 
 <img src="images/story.png" width="100%" alt="Echo Leaks: how the attack unfolded. 20 September 2026, times in UTC. Four minutes from the first question to the last answer. 09:15, The trap: 09:15 · An outside email arrives with a Word file, sent to one analyst; Hidden inside: instructions written for the AI, not for her. 10:42, The trigger: 10:42 · She opens it and asks Copilot to summarise it; Six seconds later Copilot starts searching for files she never asked about. 10:42 – 10:46, The reading: 10:42 · Copilot reads 5 confidential files, 2 seconds apart; 10:45 · With no new question from anyone, it reads 8 more; 13 files in all, from the Executive, HR, IT and Finance sites. 10:43 – 10:46, The leak: Its answers carry 13 image links to an outside server; 10:44 · One answer dumps what it calls its own configuration; The only alert fires on the analyst; nothing flags Copilot.">
